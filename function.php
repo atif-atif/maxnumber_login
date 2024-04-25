@@ -10,13 +10,6 @@ Author:
 register_activation_hook(__FILE__, 'wpbcv_plugin_activation');
 register_deactivation_hook(__FILE__, 'wpbcv_plugin_deactivation');
 
-// Enqueue necessary scripts and styles
-function wpbcv_csv_management_enqueue_scripts() {
-    // wp_enqueue_style('csv-management-style', plugins_url('/css/style.css', __FILE__));
-    wp_enqueue_script('csv-management-script', plugins_url('/js/script.js', __FILE__), array('jquery'), null, true);
-}
-add_action('admin_enqueue_scripts', 'wpbcv_csv_management_enqueue_scripts');
-
 function max_number_login_menu() {
     add_menu_page('Max Number of Logins', 'Max Logins', 'manage_options', 'max-number-login', 'wpbcv_max_number_login_page');
 }
