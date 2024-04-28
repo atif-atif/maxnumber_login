@@ -2,7 +2,7 @@
 /*
 Plugin Name: Login press Maxnumber
 Description: A simple Login press Maxnumber
-Version: 1.0
+Version: 1.0 
 Author: Manal Kashif, Muhammad Atif, Muhammad Ahmed.
 */
 
