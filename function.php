@@ -13,7 +13,7 @@ function max_number_login_menu() {
 add_action('admin_menu', 'max_number_login_menu');
 
 function wpml_max_number_login_page() {
-    echo '<div class="wrap"><h1>Max Number of Logins Page</h1><p>This is a placeholder page for managing the maximum number of logins.</p></div>';
+    echo '<div class="wrap"><h1>Max Number of Logins Page</h1></div>';
     
     ?>
     <div class='table-wrap'>
@@ -28,7 +28,7 @@ function wpml_max_number_login_page() {
     <!-- Search Form -->
     <form id="search-form" method="GET" action="">
         <label for="search">Select Blocked Country Location:</label>
-        <select name="search" id="search" multiple size="5">
+        <select name="search" id="search" multiple size="3">
             <!-- Add more country options here -->
             <option value="Afghanistan">Afghanistan</option>
             <option value="Uganda">Uganda</option>
@@ -149,8 +149,8 @@ $(document).ready(function(){
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         const { latitude, longitude } = position.coords;
-                        showdetails.textContent = `The latitude ${latitude} and longitude ${longitude}`;
-                        
+                        showdetails.textContent = `The Latitude ${latitude} and The Longitude ${longitude}`;
+                      
                         // Fetch user country
                         fetchUserCountry(latitude, longitude);
                     },
@@ -425,34 +425,37 @@ add_action('admin_init', 'restrict_admin_by_location');
 
 <style>
     .table-wrap {
-        max-width: 600px;
-        margin: 0 auto;
-        padding: 20px;
-        background-color: #808080;
-        border-radius: 8px;
+        
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        max-width: 600px;
+        background-color: #808080;
+        border-radius: 15px;
+        margin: 0 auto;
+        
     }
 
     h1 {
+        margin-bottom: 20px;
         font-size: 36px;
         font-weight: bold;
-        margin-bottom: 20px;
     }
 
     label {
-        display: block;
         margin-bottom: 8px;
         color: white;
+        display: block; 
     }
 
     input[type="text"],
     select {
-        width: 100%;
-        padding: 10px;
-        margin-bottom: 20px;
         border: 1px solid #ccc;
-        border-radius: 4px;
+        width: 100%;
+        margin-bottom: 20px;
+        padding: 10px;
         box-sizing: border-box;
+        border-radius: 4px;
+        
     }
 
     input[type="text"][readonly] {
@@ -460,14 +463,15 @@ add_action('admin_init', 'restrict_admin_by_location');
     }
 
     button {
-        padding: 10px 20px;
-        background-color: #2c3e50;
-        color: #fff;
-        border: none;
         border-radius: 4px;
+        padding: 10px 20px;
+       border-radius: 30px;
+        color: #fff;
+        background-color: #2c3e50;
+        border: none;
         cursor: pointer;
-        transition: background-color 0.3s;
         margin-top: 10px;
+        transition: background-color 0.3s;
     }
 
     button:hover {
