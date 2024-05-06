@@ -80,28 +80,6 @@ $(document).ready(function(){
 });
 </script>
 
-<?php
-// Include WordPress functionality if needed
-// require_once('wp-load.php');
-
-// Handle form submission
-if(isset($_POST['selected_countries'])) {
-    $selectedCountries = explode(',', $_POST['selected_countries']); // Split multiple countries into an array
-    
-    // Assuming you're using WordPress and $wpdb is available
-    global $wpdb;
-    
-    // Insert data into the database
-    foreach ($selectedCountries as $country) {
-        $country = trim($country); // Remove extra whitespace
-        $sql = $wpdb->prepare ("INSERT INTO {$wpdb->prefix}blocked_country (blocked_country) VALUES (%s)", $country);
-        $wpdb->query($sql);
-    }
-    
-    // You can also perform additional error handling or validation here
-    echo "<script>alert('Countries blocked successfully!');</script>";
-}
-?>
 
 
 <script>
@@ -261,11 +239,33 @@ dbDelta($sql_location_country);
 
 
 // SQL query to create the custom table for blocked country
-$sql_location_country = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}blocked_country (
+$sql_blocked_country = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}blocked_country (
     id INT AUTO_INCREMENT PRIMARY KEY,
     blocked_country VARCHAR(45)
 )";
+dbDelta($sql_blocked_country);
 
+
+// Include WordPress functionality if needed
+// require_once('wp-load.php');
+
+// Handle form submission
+if(isset($_POST['selected_countries'])) {
+    $selectedCountries = explode(',', $_POST['selected_countries']); // Split multiple countries into an array
+    
+    // Assuming you're using WordPress and $wpdb is available
+    global $wpdb;
+    
+    // Insert data into the database
+    foreach ($selectedCountries as $country) {
+        $country = trim($country); // Remove extra whitespace
+        $sql = $wpdb->prepare ("INSERT INTO {$wpdb->prefix}blocked_country (blocked_country) VALUES (%s)", $country);
+        $wpdb->query($sql);
+    }
+    
+    // You can also perform additional error handling or validation here
+    echo "<script>alert('Countries blocked successfully!');</script>";
+}
 
 
 
