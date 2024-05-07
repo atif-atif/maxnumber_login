@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: LoginPress | Max number of Logins
+Plugin Name: Login press Maxnumber
 Description: A simple Login press Maxnumber
 Version: 1.0
 Author:  Manal Kashif, Muhammad Atif, Muhammad Ahmed.
@@ -339,6 +339,41 @@ function capture_user_login_ip($user_login, $user) {
 add_action('wp_login', 'capture_user_login_ip', 10, 2);
 
 
+
+
+
+
+function check_blocked_country_on_login() {
+    global $wpdb;
+
+    // SQL query to check if the user's country is blocked
+    $query = "
+        SELECT 
+            wp_blocked_country.blocked_country,
+            wp_location_country.user_country
+        FROM 
+            {$wpdb->prefix}blocked_country AS wp_blocked_country
+        JOIN 
+            {$wpdb->prefix}location_country AS wp_location_country 
+        ON 
+            wp_blocked_country.blocked_country = wp_location_country.user_country
+    ";
+
+    // Execute the query
+    $results = $wpdb->get_results($query);
+
+    // Check if any rows are returned
+    if ($results) {
+        // Display message indicating that the user's country is blocked
+        echo "Your country has been blocked by admin.";
+        exit; // Stop further execution
+    }
+}
+
+// Hook the function to run when the login button is clicked
+add_action('wp_login', 'check_blocked_country_on_login');
+
+
 // ajax call
 // Hook for handling AJAX request to save user location
 add_action('wp_ajax_save_user_location', 'save_user_location_callback');
@@ -543,27 +578,3 @@ add_action('admin_init', 'restrict_admin_by_location');
         margin: 0 auto;
     }
 </style>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
