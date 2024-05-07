@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: Login press Maxnumber
+Plugin Name: LoginPress | Max number of Logins
 Description: A simple Login press Maxnumber
 Version: 1.0
 Author:  Manal Kashif, Muhammad Atif, Muhammad Ahmed.
