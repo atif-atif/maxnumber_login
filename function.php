@@ -13,7 +13,7 @@ function max_number_login_menu() {
 add_action('admin_menu', 'max_number_login_menu');
 
 function wpml_max_number_login_page() {
-    echo '<div class="wrap"><h1>Max Number of Logins Page</h1></div>';
+    echo '<div class="wrap" ><h1>Max Number of Logins Page</h1></div>';
     
     ?>
     <div class='table-wrap'>
@@ -45,18 +45,70 @@ function wpml_max_number_login_page() {
             <option value="Yemen">Yemen</option>
             <option value="Zambia">Zambia</option>
             <option value="Zimbabwe">Zimbabwe</option>
-        </select>
-        <div>
+         </select>
+         <div>
             <button type="button" id="add-country-btn" style="display: none;">Add Country</button>
             <button type="submit" id="finalize-btn" style="display: none;">Blocked Selected Countries</button>
-        </div>
-    </form>
+         </div>
+        </form>
 
     <button class="geo-btn">Show User Location</button>
     <p style= color:white  class="showdetails">User Location Details</p>
     <!-- User Country -->
     <p style= color:white class="usercountry">User Country</p>
 </div>
+
+<?php
+// Define a variable to hold the submitted number
+$number = "";
+
+// Check if the form is submitted
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Retrieve the value of the input field
+    $number = $_POST["numberInput"];
+    
+    // Display the number
+    echo "The number you entered is: " . $number;
+}
+
+// Function to check login attempts
+function check_login_attempts($username, $password) {
+    // Get user's IP address
+    $ip_address = $_SERVER['REMOTE_ADDR'];
+    
+    // Initialize login attempts count for the IP address
+    $login_attempts = get_transient('login_attempts_' . $ip_address);
+    
+    // If the count is not set, initialize it to 1
+    if (!$login_attempts) {
+        $login_attempts = 1;
+    } else {
+        // If count is set, increment it
+        $login_attempts++;
+    }
+    
+    // Save the updated count with a 24-hour expiration
+    set_transient('login_attempts_' . $ip_address, $login_attempts, 24 * HOUR_IN_SECONDS);
+    
+    global $number; // Access the $number variable defined outside this function
+    
+    // If login attempts exceed the submitted number, redirect user to the login page
+    if ($login_attempts > $number) {
+        wp_redirect(wp_login_url());
+        exit;
+    }
+}
+add_action('wp_authenticate', 'check_login_attempts', 10, 2);
+?>
+<div class='ip-wrap'>
+    <form method="post">
+    <h1 style= color:white >Max Login Limit</h1>
+    <label for="numberInput">Enter the number for Max number of logins:</label>
+        <input type="number" id="numberInput" name="numberInput" value="<?php echo $number; ?>">
+        <button type="submit">Submit</button>
+    </form>
+</div>
+
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
 <script>
@@ -79,8 +131,6 @@ $(document).ready(function(){
     });
 });
 </script>
-
-
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -288,6 +338,7 @@ function capture_user_login_ip($user_login, $user) {
 }
 add_action('wp_login', 'capture_user_login_ip', 10, 2);
 
+
 // ajax call
 // Hook for handling AJAX request to save user location
 add_action('wp_ajax_save_user_location', 'save_user_location_callback');
@@ -316,6 +367,7 @@ function save_user_location_callback() {
     $response = array('country' => $user_country);
     wp_send_json($response);
 }
+
 
 // Function to get user's country based on latitude and longitude
 function get_country_from_coords($latitude, $longitude) {
@@ -425,13 +477,16 @@ add_action('admin_init', 'restrict_admin_by_location');
 
 <style>
     .table-wrap {
-        
+   
+        border: 2px solid #000;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         padding: 20px;
         max-width: 600px;
         background-color: #808080;
         border-radius: 15px;
         margin: 0 auto;
+        margin-bottom: 50px;
+        margin-top: 30px;
         
     }
 
@@ -476,6 +531,16 @@ add_action('admin_init', 'restrict_admin_by_location');
 
     button:hover {
         background-color: #1a252f;
+    }
+
+    .ip-wrap {
+        border: 2px solid #000;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        max-width: 600px;
+        background-color: #808080;
+        border-radius: 15px;
+        margin: 0 auto;
     }
 </style>
 
