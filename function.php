@@ -31,6 +31,8 @@ function wpml_max_number_login_page() {
         <select name="search" id="search" multiple size="3">
             <!-- Add more country options here -->
             <option value="Afghanistan">Afghanistan</option>
+            <option value="Pakistan">Pakistan</option>
+
             <option value="Uganda">Uganda</option>
             <option value="Ukraine">Ukraine</option>
             <option value="United Arab Emirates">United Arab Emirates</option>
@@ -69,6 +71,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     
     // Display the number
     echo "The number you entered is: " . $number;
+     // Store the number in the database
+     global $wpdb;
+     $table_name = $wpdb->prefix . 'login_limit';
+     $wpdb->insert(
+         $table_name,
+         array(
+             'max_login_limit' => $number,
+         )
+     );
 }
 
 // Function to check login attempts
@@ -79,6 +90,11 @@ function check_login_attempts($username, $password) {
     // Initialize login attempts count for the IP address
     $login_attempts = get_transient('login_attempts_' . $ip_address);
     
+    // Fetch the maximum login limit from the database
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'login_limit';
+    $number_row = $wpdb->get_row("SELECT max_login_limit FROM $table_name WHERE id = 1"); // Assuming the max login limit is stored in the row with id 1
+
     // If the count is not set, initialize it to 1
     if (!$login_attempts) {
         $login_attempts = 1;
@@ -90,16 +106,20 @@ function check_login_attempts($username, $password) {
     // Save the updated count with a 24-hour expiration
     set_transient('login_attempts_' . $ip_address, $login_attempts, 24 * HOUR_IN_SECONDS);
     
-    global $number; // Access the $number variable defined outside this function
-    
-    // If login attempts exceed the submitted number, redirect user to the login page
-    if ($login_attempts > $number) {
-        wp_redirect(wp_login_url());
-        exit;
+    // If the maximum login limit is fetched successfully from the database
+    if ($number_row) {
+        $number = $number_row->max_login_limit;
+        
+        // If login attempts exceed the fetched number, redirect user to the login page
+        if ($login_attempts > $number) {
+            wp_redirect(wp_login_url());
+            exit;
+        }
     }
 }
 add_action('wp_authenticate', 'check_login_attempts', 10, 2);
 ?>
+
 <div class='ip-wrap'>
     <form method="post">
     <h1 style= color:white >Max Login Limit</h1>
@@ -312,6 +332,15 @@ $sql_blocked_country = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}blocked_countr
 )";
 dbDelta($sql_blocked_country);
 
+// SQL query to create the custom table for login limit
+$sql_login_limit = "CREATE TABLE IF NOT EXISTS {$wpdb->prefix}login_limit (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    max_login_limit INT
+)";
+
+// Execute the SQL query for login limit table
+dbDelta($sql_login_limit);
+
 
 // Include WordPress functionality if needed
 // require_once('wp-load.php');
@@ -362,35 +391,35 @@ add_action('wp_login', 'capture_user_login_ip', 10, 2);
 
 
 
-// function check_blocked_country_on_login() {
-//     global $wpdb;
+function check_blocked_country_on_login() {
+    global $wpdb;
 
-//     // SQL query to check if the user's country is blocked
-//     $query = "
-//         SELECT 
-//             wp_blocked_country.blocked_country,
-//             wp_location_country.user_country
-//         FROM 
-//             {$wpdb->prefix}blocked_country AS wp_blocked_country
-//         JOIN 
-//             {$wpdb->prefix}location_country AS wp_location_country 
-//         ON 
-//             wp_blocked_country.blocked_country = wp_location_country.user_country
-//     ";
+    // SQL query to check if the user's country is blocked
+    $query = "
+        SELECT 
+            wp_blocked_country.blocked_country,
+            wp_location_country.user_country
+        FROM 
+            {$wpdb->prefix}blocked_country AS wp_blocked_country
+        JOIN 
+            {$wpdb->prefix}location_country AS wp_location_country 
+        ON 
+            wp_blocked_country.blocked_country = wp_location_country.user_country
+    ";
 
-//     // Execute the query
-//     $results = $wpdb->get_results($query);
+    // Execute the query
+    $results = $wpdb->get_results($query);
 
-//     // Check if any rows are returned
-//     if ($results) {
-//         // Display message indicating that the user's country is blocked
-//         echo "Your country has been blocked by admin.";
-//         exit; // Stop further execution
-//     }
-// }
+    // Check if any rows are returned
+    if ($results) {
+        // Display message indicating that the user's country is blocked
+        echo "Your country has been blocked by admin.";
+        exit; // Stop further execution
+    }
+}
 
-// // Hook the function to run when the login button is clicked
-// add_action('wp_login', 'check_blocked_country_on_login');
+// Hook the function to run when the login button is clicked
+add_action('wp_login', 'check_blocked_country_on_login');
 
 
 
