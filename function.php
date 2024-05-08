@@ -191,71 +191,88 @@ $(document).ready(function(){
 </script>
 <!-- Location script -->
 <script>
-        const showdetails = document.querySelector(".showdetails");
-        const userCountry = document.querySelector(".usercountry");
+    const showdetails = document.querySelector(".showdetails");
+    const userCountry = document.querySelector(".usercountry");
 
-        document.querySelector('.geo-btn').addEventListener('click', () => {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const { latitude, longitude } = position.coords;
-                        showdetails.textContent = `The Latitude ${latitude} and The Longitude ${longitude}`;
-                      
-                        // Fetch user country
-                        fetchUserCountry(latitude, longitude);
-                    },
-                    (error) => {
-                        showdetails.textContent = error.message;
-                        console.log(error.message);
-                    }
-                );
-            }
-        });
-
-        function fetchUserCountry(latitude, longitude) {
-            fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.countryName) {
-                    userCountry.textContent = `User Country: ${data.countryName}`;
-                } else {
-                    userCountry.textContent = 'User Country: Unknown';
+    document.querySelector('.geo-btn').addEventListener('click', () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const { latitude, longitude } = position.coords;
+                    showdetails.textContent = `The Latitude ${latitude} and The Longitude ${longitude}`;
+                  
+                    // Fetch user country
+                    fetchUserCountry(latitude, longitude);
+                },
+                (error) => {
+                    showdetails.textContent = error.message;
+                    console.log(error.message);
                 }
-            })
-            .catch(error => {
-                console.error('Error fetching user country:', error);
-                userCountry.textContent = 'User Country: Unknown';
-            });
+            );
         }
-    </script>
+    });
+
+    function fetchUserCountry(latitude, longitude) {
+        fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.countryName) {
+                userCountry.textContent = `User Country: ${data.countryName}`;
+                // Call function to store country in database
+                storeCountryInDatabase(data.countryName, latitude, longitude);
+            } else {
+                userCountry.textContent = 'User Country: Unknown';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching user country:', error);
+            userCountry.textContent = 'User Country: Unknown';
+        });
+    }
+
+    function storeCountryInDatabase(country, latitude, longitude) {
+        // AJAX request to store country in database
+        const xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if (this.readyState === 4 && this.status === 200) {
+                console.log('Country stored in database successfully.');
+            }
+        };
+        xhr.open("POST", "<?php echo admin_url('admin-ajax.php'); ?>", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.send(`action=save_user_location&country=${encodeURIComponent(country)}&latitude=${latitude}&longitude=${longitude}`);
+    }
+</script>
+
 
     <!-- ajax script -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelector('.geo-btn').addEventListener('click', function() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    var latitude = position.coords.latitude;
-                    var longitude = position.coords.longitude;
-                    
-                    // Send latitude and longitude to backend using AJAX
-                    var xhr = new XMLHttpRequest();
-                    xhr.onreadystatechange = function() {
-                        if (this.readyState === 4 && this.status === 200) {
-                            var response = JSON.parse(this.responseText);
-                            document.querySelector('.showdetails').innerHTML = 'User Location Details:';
-                            document.querySelector('.usercountry').innerHTML = 'User Country: ' + response.country;
-                        }
-                    };
-                    xhr.open("POST", "<?php echo admin_url('admin-ajax.php'); ?>", true);
-                    xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                    xhr.send("action=save_user_location&latitude=" + latitude + "&longitude=" + longitude);
-                });
-            } else {
-                alert('Geolocation is not supported by this browser.');
-            }
-        });
+   document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('.geo-btn').addEventListener('click', function() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var latitude = position.coords.latitude;
+                var longitude = position.coords.longitude;
+                
+                // Send latitude and longitude to backend using AJAX
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function() {
+                    if (this.readyState === 4 && this.status === 200) {
+                        var response = JSON.parse(this.responseText);
+                        document.querySelector('.showdetails').innerHTML = 'User Location Details:';
+                        document.querySelector('.usercountry').innerHTML = 'User Country: ' + response.country;
+                    }
+                };
+                xhr.open("POST", "<?php echo admin_url('admin-ajax.php'); ?>", true);
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhr.send("action=save_user_location&latitude=" + latitude + "&longitude=" + longitude);
+            });
+        } else {
+            alert('Geolocation is not supported by this browser.');
+        }
     });
+});
+
 </script>
 
 <?php
@@ -343,35 +360,39 @@ add_action('wp_login', 'capture_user_login_ip', 10, 2);
 
 
 
-function check_blocked_country_on_login() {
-    global $wpdb;
 
-    // SQL query to check if the user's country is blocked
-    $query = "
-        SELECT 
-            wp_blocked_country.blocked_country,
-            wp_location_country.user_country
-        FROM 
-            {$wpdb->prefix}blocked_country AS wp_blocked_country
-        JOIN 
-            {$wpdb->prefix}location_country AS wp_location_country 
-        ON 
-            wp_blocked_country.blocked_country = wp_location_country.user_country
-    ";
 
-    // Execute the query
-    $results = $wpdb->get_results($query);
+// function check_blocked_country_on_login() {
+//     global $wpdb;
 
-    // Check if any rows are returned
-    if ($results) {
-        // Display message indicating that the user's country is blocked
-        echo "Your country has been blocked by admin.";
-        exit; // Stop further execution
-    }
-}
+//     // SQL query to check if the user's country is blocked
+//     $query = "
+//         SELECT 
+//             wp_blocked_country.blocked_country,
+//             wp_location_country.user_country
+//         FROM 
+//             {$wpdb->prefix}blocked_country AS wp_blocked_country
+//         JOIN 
+//             {$wpdb->prefix}location_country AS wp_location_country 
+//         ON 
+//             wp_blocked_country.blocked_country = wp_location_country.user_country
+//     ";
 
-// Hook the function to run when the login button is clicked
-add_action('wp_login', 'check_blocked_country_on_login');
+//     // Execute the query
+//     $results = $wpdb->get_results($query);
+
+//     // Check if any rows are returned
+//     if ($results) {
+//         // Display message indicating that the user's country is blocked
+//         echo "Your country has been blocked by admin.";
+//         exit; // Stop further execution
+//     }
+// }
+
+// // Hook the function to run when the login button is clicked
+// add_action('wp_login', 'check_blocked_country_on_login');
+
+
 
 
 // ajax call
@@ -380,39 +401,37 @@ add_action('wp_ajax_save_user_location', 'save_user_location_callback');
 function save_user_location_callback() {
     global $wpdb;
     
-    // Get latitude, longitude, and user country from AJAX request
-    $latitude = sanitize_text_field($_POST['latitude']);
-    $longitude = sanitize_text_field($_POST['longitude']);
-    
-    // Get user country based on latitude and longitude
-    $user_country = get_country_from_coords($latitude, $longitude);
-    
+    // Get country, latitude, and longitude from AJAX request
+    $country = isset($_POST['country']) ? sanitize_text_field($_POST['country']) : '';
+    $latitude = isset($_POST['latitude']) ? sanitize_text_field($_POST['latitude']) : '';
+    $longitude = isset($_POST['longitude']) ? sanitize_text_field($_POST['longitude']) : '';
+
     // Insert data into location_country table
-    $wpdb->insert(
+    $result = $wpdb->insert(
         $wpdb->prefix . 'location_country',
         array(
-            'user_country' => $user_country,
+            'user_country' => $country,
             'user_latitude' => $latitude,
             'user_longitude' => $longitude
-        ),
-        array('%s', '%s', '%s')
+        )
     );
-    
-    // Send response back to the JavaScript
-    $response = array('country' => $user_country);
-    wp_send_json($response);
+
+    // Check for errors during database insertion
+    if ($result === false) {
+        // If insertion fails, send error response
+        $response = array('error' => 'Database insertion failed.');
+        wp_send_json_error($response);
+    } else {
+        // If insertion succeeds, send success response
+        $response = array('success' => 'Data inserted successfully.');
+        wp_send_json_success($response);
+    }
 }
 
 
-// Function to get user's country based on latitude and longitude
-function get_country_from_coords($latitude, $longitude) {
-    // Use your method to determine the country from latitude and longitude
-    // Example: You can use a third-party API like https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=40.7128&longitude=-74.0060
-    // Replace the API call with your actual method to get the country
-    // Parse the API response to extract the country
-    // Return the country name
-    return 'Country'; // Example country, replace with actual country name
-}
+
+
+
 // Function to capture user location country and insert into location_country table
 function capture_user_location_country($user_login, $user) {
     global $wpdb;
