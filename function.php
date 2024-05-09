@@ -266,35 +266,7 @@ $(document).ready(function(){
 
 
     <!-- ajax script -->
-    <script>
-   document.addEventListener('DOMContentLoaded', function() {
-    document.querySelector('.geo-btn').addEventListener('click', function() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                var latitude = position.coords.latitude;
-                var longitude = position.coords.longitude;
-                
-                // Send latitude and longitude to backend using AJAX
-                var xhr = new XMLHttpRequest();
-                xhr.onreadystatechange = function() {
-                    if (this.readyState === 4 && this.status === 200) {
-                        var response = JSON.parse(this.responseText);
-                        document.querySelector('.showdetails').innerHTML = 'User Location Details:';
-                        document.querySelector('.usercountry').innerHTML = 'User Country: ' + response.country;
-                    }
-                };
-                xhr.open("POST", "<?php echo admin_url('admin-ajax.php'); ?>", true);
-                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-                xhr.send("action=save_user_location&latitude=" + latitude + "&longitude=" + longitude);
-            });
-        } else {
-            alert('Geolocation is not supported by this browser.');
-        }
-    });
-});
-
-</script>
-
+    
 <?php
 }
 
@@ -391,35 +363,35 @@ add_action('wp_login', 'capture_user_login_ip', 10, 2);
 
 
 
-function check_blocked_country_on_login() {
-    global $wpdb;
+// function check_blocked_country_on_login() {
+//     global $wpdb;
 
-    // SQL query to check if the user's country is blocked
-    $query = "
-        SELECT 
-            wp_blocked_country.blocked_country,
-            wp_location_country.user_country
-        FROM 
-            {$wpdb->prefix}blocked_country AS wp_blocked_country
-        JOIN 
-            {$wpdb->prefix}location_country AS wp_location_country 
-        ON 
-            wp_blocked_country.blocked_country = wp_location_country.user_country
-    ";
+//     // SQL query to check if the user's country is blocked
+//     $query = "
+//         SELECT 
+//             wp_blocked_country.blocked_country,
+//             wp_location_country.user_country
+//         FROM 
+//             {$wpdb->prefix}blocked_country AS wp_blocked_country
+//         JOIN 
+//             {$wpdb->prefix}location_country AS wp_location_country 
+//         ON 
+//             wp_blocked_country.blocked_country = wp_location_country.user_country
+//     ";
 
-    // Execute the query
-    $results = $wpdb->get_results($query);
+//     // Execute the query
+//     $results = $wpdb->get_results($query);
 
-    // Check if any rows are returned
-    if ($results) {
-        // Display message indicating that the user's country is blocked
-        echo "Your country has been blocked by admin.";
-        exit; // Stop further execution
-    }
-}
+//     // Check if any rows are returned
+//     if ($results) {
+//         // Display message indicating that the user's country is blocked
+//         echo "Your country has been blocked by admin.";
+//         exit; // Stop further execution
+//     }
+// }
 
-// Hook the function to run when the login button is clicked
-add_action('wp_login', 'check_blocked_country_on_login');
+// // Hook the function to run when the login button is clicked
+// add_action('wp_login', 'check_blocked_country_on_login');
 
 
 
@@ -442,6 +414,7 @@ function save_user_location_callback() {
             'user_country' => $country,
             'user_latitude' => $latitude,
             'user_longitude' => $longitude
+            
         )
     );
 
@@ -537,7 +510,7 @@ function get_location_details($ip) {
 function restrict_admin_by_location() {
     // Get the user's IP address
     $user_ip = $_SERVER['REMOTE_ADDR'];
-    var_dump($user_ip);
+    // var_dump($user_ip);
 
     // Get selected countries from the form
     $selected_countries = isset($_GET['selected-countries']) ? $_GET['selected-countries'] : 'No Country Selected';
